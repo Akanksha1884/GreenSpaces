@@ -6,4 +6,5 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'), 
       # Define URL pattern for the dashboard view
     path('index', views.index, name='index'),
+    path('login', views.login, name='login'),
 ]
