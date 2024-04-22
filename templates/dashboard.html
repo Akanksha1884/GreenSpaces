@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thane Green Spaces Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #333;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+
+    nav {
+      background-color: #444;
+      padding: 10px;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 20px;
+    }
+
+    main {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 20px;
+    }
+
+    #greenSpacesChart {
+      width: 70%;
+      height: 200px; /* Changed height */
+      margin: 0 auto; /* Centering the chart */
+    }
+
+    select {
+      margin-bottom: 20px;
+    }
+
+    #map {
+      width: 250%;
+      height: 250px;
+    }
+
+    section {
+      flex-basis: 100%;
+    }
+
+    table {
+      width: 50%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    tr:hover {
+      background-color: #ddd;
+    }
+    .map-wrapper {
+  position: relative;
+}
+
+#areaType {
+  position: absolute;
+  bottom: 200px; /* Adjust as needed */
+  left: 50px; /* Adjust as needed */
+  z-index: 1000; /* Make sure it's above the map */
+}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Thane Green Spaces Dashboard</h1>
+  </header>
+  <nav>
+    <a href="#map">Map</a>
+    <a href="#chart">Graph</a>
+    <a href="#suggestion">Suggestion Page</a>
+  </nav>
+  <main>
+    <h2>Green Places Map</h2>
+    <section id="map">
+      <div class="map-wrapper">
+        <select id="areaType">
+          <option value="green">Green Areas</option>
+          <option value="nonGreen">Non-Green Areas</option>
+          <option value="potentialGreen">Potential Green Spaces</option>
+        </select>
+        <div id="map"></div>
+      </div>
+    </section>
+    <br><br>
+    <section id="chart">
+      <h2><center>Green Spaces Graph (2000-2023)</center></h2>
+      <canvas id="greenSpacesChart"></canvas>
+    </section>
+    <section id="suggestion">
+      <h2><center>Green Spaces Suggestion Page</center></h2>
+      <form id="green-space-form">
+        <label for="land-type">Land Type:</label>
+        <select id="land-type" name="land-type">
+          <option value="public">Public Land</option>
+          <option value="private">Private Land</option>
+          <option value="government">Government-Owned Land</option>
+        </select><br><br>
+        <label for="land-description">Land Description:</label><br>
+        <textarea id="land-description" name="land-description" rows="4" cols="50"></textarea><br><br>
+        <button type="submit">Submit</button>
+      </form>
+      <section id="green-spaces-list">
+        <h2>Available Green Spaces</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="green-spaces-table">
+            <!-- Green spaces data will be dynamically added here -->
+          </tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+  <script>
+    // Chart.js for the green spaces graph
+    const years = Array.from({ length: 24 }, (_, i) => 2000 + i);
+    const greenSpacesData = [500, 550, 600, 620, 630, 640, 650, 670, 690, 700, 710, 720, 730, 740, 750, 760, 770, 780, 790, 800, 810, 820, 830];
+
+    function createChart() {
+      const ctx = document.getElementById('greenSpacesChart').getContext('2d');
+      const greenSpacesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: [{
+            label: 'Green Spaces',
+            data: greenSpacesData,
+            borderColor: 'green',
+            backgroundColor: 'rgba(0, 128, 0, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Year'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Green Spaces (acres)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    createChart();
+
+    // Leaflet for the map
+    var map = L.map('map').setView([19.2183, 72.9781], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var greenPlaces = [
+      {
+        name: 'Sanjay Gandhi National Park',
+        location: [19.2104, 72.9140]
+      },
+      {
+        name: 'Upvan Lake',
+        location: [19.1860, 72.9669]
+      },
+      {
+        name: 'Ovalekar Wadi Butterfly Garden',
+        location: [19.2375, 72.9826]
+      },
+      // Add more green places as needed
+    ];
+
+    var nonGreenPlaces = [
+      {
+        name: 'Thane Industrial Area',
+        location: [19.2000, 72.9669]
+      },
+      {
+        name: 'Thane Railway Station',
+        location: [19.1855, 72.9758]
+      }
+      // Add more non-green places as needed
+    ];
+
+    var potentialGreenSpaces = [
+      {
+        name: 'City Park Project',
+        location: [19.2250, 72.9650]
+      },
+      {
+        name: 'Community Garden Proposal',
+        location: [19.2400, 72.9700]
+      },
+      // Add more potential green spaces as needed
+    ];
+
+    var currentMarkers = [];
+
+    function updateMap(selection) {
+      currentMarkers.forEach(function (marker) {
+        map.removeLayer(marker);
+      });
+      currentMarkers = [];
+
+      var placesToShow;
+      if (selection === 'green') {
+        placesToShow = greenPlaces;
+      } else if (selection === 'nonGreen') {
+        placesToShow = nonGreenPlaces;
+      } else if (selection === 'potentialGreen') {
+        placesToShow = potentialGreenSpaces;
+      }
+
+      placesToShow.forEach(function (place) {
+        var marker = L.marker(place.location)
+          .addTo(map)
+          .bindPopup('<b>' + place.name + '</b>');
+        currentMarkers.push(marker);
+      });
+    }
+
+    updateMap('green');
+
+    document.getElementById('areaType').addEventListener('change', function () {
+      updateMap(this.value);
+    });
+
+    document.getElementById("green-space-form").addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      // Get form values
+      var landType = document.getElementById("land-type").value;
+      var landDescription = document.getElementById("land-description").value;
+
+      // Create new row for the table
+      var newRow = document.createElement("tr");
+      newRow.innerHTML = `
+            <td>${landType}</td>
+            <td>${landDescription}</td>
+        `;
+
+      // Append new row to the table
+      document.getElementById("green-spaces-table").appendChild(newRow);
+
+      // Reset form
+      document.getElementById("green-space-form").reset();
+    });
+  </script>
+</body>
+
+</html>
